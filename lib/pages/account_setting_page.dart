@@ -11,6 +11,7 @@ class AccountSettingPage extends StatefulWidget {
 }
 
 class _AccountSettingPageState extends State<AccountSettingPage> {
+  bool isLoading = false;
   void deleteAccount() {
     showDialog(
       context: context,
@@ -18,8 +19,16 @@ class _AccountSettingPageState extends State<AccountSettingPage> {
         title: "Delete Account",
         message: "Are you Sure? you want to Delete account",
         onTap: () async {
+          Navigator.pop(context);
+          setState(() {
+            isLoading = true;
+          });
           await AuthDatabase().deleteUser();
+
           if (!mounted) return;
+          setState(() {
+            isLoading = false;
+          });
           Navigator.pushAndRemoveUntil(
             this.context,
             goToDeletePageToLoginPage(this.context),
@@ -41,30 +50,36 @@ class _AccountSettingPageState extends State<AccountSettingPage> {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
         ),
       ),
-      body: Column(
-        children: [
-          GestureDetector(
-            onTap: () => deleteAccount(),
-            child: Container(
-              margin: EdgeInsets.symmetric(horizontal: 15),
-              padding: EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  "Delete Account",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+      body: 
+       Stack(
+         children: [if (isLoading) Center(child: CircularProgressIndicator()),
+          Column(
+          children: [
+            GestureDetector(
+              onTap: () => deleteAccount(),
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: 15),
+                padding: EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    "Delete Account",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+            
+          ],
+               ),
+         ]
+       ),
     );
   }
 }
