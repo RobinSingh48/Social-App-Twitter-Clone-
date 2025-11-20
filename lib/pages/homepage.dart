@@ -7,6 +7,7 @@ import 'package:social_app/database/database_provider.dart';
 import 'package:social_app/database/model/post_model.dart';
 import 'package:social_app/helper/navigation.dart';
 import 'package:social_app/helper/pop_messages.dart';
+import 'package:social_app/helper/textstyle.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -76,20 +77,39 @@ class _HomepageState extends State<Homepage> {
 
   @override
   Widget build(BuildContext context) {
-    final allposts = listenableProvider.allPosts;
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text("H O M E", style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
+   
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text("H O M E", style: TextStyle(fontWeight: FontWeight.bold)),
+          bottom: TabBar(
+            labelColor: Colors.purple,
+            tabs: [
+              Text("For You", style: boldText()),
+              Text("Following", style: boldText()),
+            ],
+          ),
+        ),
 
-      drawer: MyDrawer(),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.purple,
-        onPressed: () => addPost(),
-        child: Icon(Icons.add, color: Colors.white),
+        drawer: MyDrawer(),
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: Colors.purple,
+          onPressed: () => addPost(),
+          child: Icon(Icons.add, color: Colors.white),
+        ),
+        body: Consumer<DatabaseServiceProvider>(
+          builder: (context, provider, _) {
+            return TabBarView(
+              children: [
+                _buildPostContainer(provider.allPosts),
+                _buildPostContainer(provider.showingFollowingPosts),
+              ],
+            );
+          },
+        ),
       ),
-      body: _buildPostContainer(allposts),
     );
   }
 
@@ -108,7 +128,7 @@ class _HomepageState extends State<Homepage> {
               return MyPostContainer(
                 post: post,
                 onUserTap: () => goToProfilePage(context, post.uid),
-                onMessageTap: () => goToCommentPage(context,post),
+                onMessageTap: () => goToCommentPage(context, post),
               );
             },
           );

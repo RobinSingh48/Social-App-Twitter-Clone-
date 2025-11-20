@@ -21,11 +21,24 @@ class DatabaseServiceProvider extends ChangeNotifier {
 
   List<Posts> _allPosts = [];
   List<Posts> get allPosts => _allPosts;
+  List<Posts> _showFollowingPosts = [];
+  List<Posts> get showingFollowingPosts => _showFollowingPosts;
 
   Future<void> loadAllPostsProvider() async {
     final posts = await _db.getAllPostFromFirebase();
     final blockUserId = await _db.getBlockUserListFromFirebase();
+    final followingUser = await _db.getFollowingListFromFirebase(
+      _auth.currentUserId,
+    );
     _allPosts = posts.where((doc) => !blockUserId.contains(doc.uid)).toList();
+    _showFollowingPosts = posts
+        .where(
+          (doc) =>
+              doc.uid != _auth.currentUserId &&
+              !blockUserId.contains(doc.uid) &&
+              followingUser.contains(doc.uid),
+        )
+        .toList();
     initializedLikes();
 
     notifyListeners();
@@ -203,6 +216,7 @@ class DatabaseServiceProvider extends ChangeNotifier {
         await _db.followUserInFirebase(userId);
         await _db.getFollowerListFromFirebase(currentUserId);
         await _db.getFollowingListFromFirebase(currentUserId);
+        loadAllPostsProvider();
       } catch (e) {
         _followers[userId]?.remove(currentUserId);
         _followersCount[userId] = (_followersCount[userId] ?? 0) - 1;
@@ -234,6 +248,7 @@ class DatabaseServiceProvider extends ChangeNotifier {
         await _db.unFollowUserInFirebase(userId);
         await _db.getFollowerListFromFirebase(currentUserId);
         await _db.getFollowingListFromFirebase(currentUserId);
+        loadAllPostsProvider();
       } catch (e) {
         _followers[userId]?.add(currentUserId);
         _followersCount[userId] = (_followersCount[userId] ?? 0) + 1;
